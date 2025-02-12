@@ -1,7 +1,4 @@
 
-
-
-
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -47,10 +44,6 @@ export const authOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
-    // GitHubProvider({
-    //   clientId: process.env.GITHUB_CLIENT_ID,
-    //   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    // }),
   ],
   session: { strategy: "jwt" },
   callbacks: {
@@ -73,5 +66,6 @@ export const authOptions = {
   },
 };
 
+// export default NextAuth(authOptions);
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

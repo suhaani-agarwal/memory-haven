@@ -15,7 +15,7 @@ const loginPage = () => {
 
   useEffect(() => {
     if (status === "authenticated") {
-      console.log("✅ User is authenticated, redirecting...");
+      console.log("User is authenticated, redirecting...");
       router.push("/dashboard");
     }
   }, [status]);

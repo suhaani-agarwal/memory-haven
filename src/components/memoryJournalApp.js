@@ -1,4 +1,3 @@
-
 "use client"
 import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -8,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
+import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 
 
@@ -173,10 +172,14 @@ const MemoryJournalApp = () => {
 
 
 const JournalEntry = () => {
+    const { data: session } = useSession();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+
+
   const [entry, setEntry] = useState("");
   const [mood, setMood] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const videoRef = useRef(null);
@@ -272,106 +275,49 @@ const userId = searchParams.get("userId");
     setIsRecording(!isRecording);
   };
 
-  // const handleMemoryUpload = async (text, imageFile, audioFile, userId) => {
-  //   try {
-  //     // Upload image if provided
-  //     const imageUrl = imageFile ? await uploadToSupabase(imageFile) : null;
-  //     // Upload audio if provided
-  //     const audioUrl = audioFile ? await uploadToSupabase(audioFile) : null;
-  
-  //     // Send data to API
-  //     const response = await fetch("/api/memories", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ text, imageUrl, audioUrl, userId }),
-  //     });
-  
-  //     if (!response.ok) {
-  //       throw new Error("Failed to upload memory.");
-  //     }
-  
-  //     console.log("Memory uploaded successfully!");
-  //   } catch (error) {
-  //     console.error("Error uploading memory:", error);
-  //   }
-  // };
   
 
-  // const handleMemoryUpload = async () => {
-  //   if (!userId || !entry) return;
-    
-  //   try {
-  //     setIsSubmitting(true);
-
-  //     // Prepare files
-  //     let imageFile = null;
-  //     let audioFile = null;
-
-  //     if (capturedImage) {
-  //       imageFile = base64ToFile(capturedImage, 'image.png');
-  //     }
-
-  //     if (audioURL) {
-  //       audioFile = await audioURLToFile(audioURL);
-  //     }
-
-  //     // Create FormData
-  //     const formData = new FormData();
-  //     formData.append('text', entry);
-  //     formData.append('mood', mood);
-  //     formData.append('userId', userId);
-  //     if (imageFile) formData.append('image', imageFile);
-  //     if (audioFile) formData.append('audio', audioFile);
-
-  //     // Send to API
-  //     const response = await fetch('/api/memories', {
-  //       method: 'POST',
-  //       body: formData,
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to upload memory');
-  //     }
-
-  //     // Reset form
-  //     setEntry("");
-  //     setMood(null);
-  //     setCapturedImage(null);
-  //     setAudioURL(null);
-
-  //     // You might want to trigger a refresh of the dashboard here
-  //     // or show a success message
-  //   } catch (error) {
-  //     console.error('Error uploading memory:', error);
-  //     // Show error message to user
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-  const handleMemoryUpload = () => {
-    if (!entry) return;
+  const handleMemoryUpload = async () => {
+    if (!session?.user?.id || !entry) {
+      toast({
+        title: "Error",
+        description: "Please write something in your journal entry",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       setIsSubmitting(true);
 
-      // Create memory object
-      const memory = {
-        id: Date.now(),
-        date: new Date().toISOString(),
-        text: entry,
-        mood: mood,
-        image: capturedImage,
-        audio: audioURL,
-      };
+      // Prepare files
+      let imageFile = null;
+      let audioFile = null;
 
-      // Get existing memories from localStorage
-      const existingMemories = JSON.parse(localStorage.getItem('memories') || '[]');
-      
-      // Add new memory to the beginning of the array
-      const updatedMemories = [memory, ...existingMemories];
-      
-      // Store in localStorage
-      localStorage.setItem('memories', JSON.stringify(updatedMemories));
+      if (capturedImage) {
+        imageFile = base64ToFile(capturedImage, 'image.png');
+      }
+
+      if (audioURL) {
+        audioFile = await audioURLToFile(audioURL);
+      }
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append('text', entry);
+      if (mood) formData.append('mood', mood);
+      if (imageFile) formData.append('image', imageFile);
+      if (audioFile) formData.append('audio', audioFile);
+
+      // Send to API
+      const response = await fetch('/api/memories', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload memory');
+      }
 
       // Reset form
       setEntry("");
@@ -379,13 +325,22 @@ const userId = searchParams.get("userId");
       setCapturedImage(null);
       setAudioURL(null);
 
+      toast({
+        title: "Success",
+        description: "Memory saved successfully!",
+      });
+
     } catch (error) {
-      console.error('Error saving memory:', error);
+      console.error('Error uploading memory:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save memory. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
 
   const moods = [
     { emoji: "😀", label: "Happy" },
@@ -466,13 +421,18 @@ const userId = searchParams.get("userId");
               <Mic className="w-6 h-6" />
             </motion.button>
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600"
-              onClick={()=>handleMemoryUpload()}
-            >
-              <Send className="w-6 h-6" />
-            </motion.button>
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+      onClick={handleMemoryUpload}
+      disabled={isSubmitting || !entry}
+    >
+      {isSubmitting ? (
+        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+      ) : (
+        <Send className="w-6 h-6" />
+      )}
+    </motion.button>
           </div>
         </div>
 
@@ -505,219 +465,194 @@ const userId = searchParams.get("userId");
   );
 };
 
+// const Dashboard = () => {
+//   const [memories, setMemories] = useState([]);
+//   useEffect(() => {
+//     const fetchMemories = async () => {
+//       const res = await fetch("/api/memories");
+//       const data = await res.json();
+//       setMemories(data);
+//     };
+//     fetchMemories();
+//   }, []);
+//   const recentEntries = [
+//     {
+//       date: 'Today',
+//       summary: 'Enjoyed a peaceful morning walk in the park, followed by coffee with Sarah.',
+//       mood: '😀'
+//     },
+//     {
+//       date: 'Yesterday',
+//       summary: 'Listened to favorite jazz music and worked on the puzzle.',
+//       mood: '😐'
+//     }
+//   ];
+
+//   const flashbacks = [
+//     {
+//       title: 'Photo Memory',
+//       description: 'Remember this photo from the park last week?',
+//       type: 'photo'
+//     },
+//     {
+//       title: 'Music Memory',
+//       description: 'You enjoyed these jazz songs yesterday.',
+//       type: 'music'
+//     }
+//   ];
+
+//   return (
+//     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+//       <Card>
+//         <CardHeader>
+//           <CardTitle className="flex items-center gap-2">
+//             <Calendar className="w-6 h-6" />
+//             Recent Memories
+//           </CardTitle>
+//         </CardHeader>
+//         <CardContent>
+//           <motion.div
+//             initial={{ opacity: 0 }}
+//             animate={{ opacity: 1 }}
+//             className="space-y-4"
+//           >
+//             {recentEntries.map((entry, index) => (
+//               <motion.div
+//                 key={index}
+//                 initial={{ opacity: 0, y: 20 }}
+//                 animate={{ opacity: 1, y: 0 }}
+//                 transition={{ delay: index * 0.1 }}
+//                 className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800"
+//               >
+//                 <div className="flex justify-between items-start mb-2">
+//                   <span className="font-medium">{entry.date}</span>
+//                   <span className="text-2xl">{entry.mood}</span>
+//                 </div>
+//                 <p className="text-slate-600 dark:text-slate-300">{entry.summary}</p>
+//               </motion.div>
+//             ))}
+//           </motion.div>
+//         </CardContent>
+//       </Card>
+      
+//       <Card>
+//         <CardHeader>
+//           <CardTitle className="flex items-center gap-2">
+//             <Bell className="w-6 h-6" />
+//             Memory Flashbacks
+//           </CardTitle>
+//         </CardHeader>
+//         <CardContent>
+//           <motion.div
+//             initial={{ opacity: 0 }}
+//             animate={{ opacity: 1 }}
+//             className="space-y-4"
+//           >
+//             {flashbacks.map((flashback, index) => (
+//               <motion.div
+//                 key={index}
+//                 initial={{ opacity: 0, y: 20 }}
+//                 animate={{ opacity: 1, y: 0 }}
+//                 transition={{ delay: index * 0.1 }}
+//                 className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800"
+//               >
+//                 <div className="flex items-start gap-3">
+//                   {flashback.type === 'photo' ? (
+//                     <Camera className="w-6 h-6 text-blue-500" />
+//                   ) : (
+//                     <Music className="w-6 h-6 text-blue-500" />
+//                   )}
+//                   <div>
+//                     <h3 className="font-medium mb-1">{flashback.title}</h3>
+//                     <p className="text-slate-600 dark:text-slate-300">{flashback.description}</p>
+//                   </div>
+//                 </div>
+//               </motion.div>
+//             ))}
+//           </motion.div>
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// };
+
 const Dashboard = () => {
-  const [memories, setMemories] = useState([]);
-  useEffect(() => {
-    // Load memories from localStorage
-    const loadMemories = () => {
-      const storedMemories = JSON.parse(localStorage.getItem('memories') || '[]');
-      setMemories(storedMemories);
-    };
-
-    loadMemories();
-
-    // Add event listener for storage changes
-    window.addEventListener('storage', loadMemories);
-    return () => window.removeEventListener('storage', loadMemories);
-  }, []);
-
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString();
-    }
+    const [memories, setMemories] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+  
+    useEffect(() => {
+      const fetchMemories = async () => {
+        try {
+          const res = await fetch("/api/memories");
+          if (!res.ok) throw new Error("Failed to fetch memories");
+          const data = await res.json();
+          setMemories(data);
+        } catch (error) {
+          console.error("Error fetching memories:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+  
+      fetchMemories();
+    }, []);
+  
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-6 h-6" />
+              Recent Memories
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="flex justify-center p-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-4"
+              >
+                {memories.map((memory, index) => (
+                  <motion.div
+                    key={memory.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800"
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-medium">
+                        {new Date(memory.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300">{memory.text}</p>
+                    {memory.imageUrl && (
+                      <img
+                        src={memory.imageUrl}
+                        alt="Memory"
+                        className="mt-2 rounded-lg max-h-40 object-cover"
+                      />
+                    )}
+                    {memory.audioUrl && (
+                      <audio controls className="mt-2 w-full">
+                        <source src={memory.audioUrl} type="audio/wav" />
+                        Your browser does not support the audio element.
+                      </audio>
+                    )}
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
   };
-
-
-  const flashbacks = [
-    {
-      title: 'Photo Memory',
-      description: 'Remember this photo from the park last week?',
-      type: 'photo'
-    },
-    {
-      title: 'Music Memory',
-      description: 'You enjoyed these jazz songs yesterday.',
-      type: 'music'
-    }
-  ];
-
-  // return (
-  //   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-  //     <Card>
-  //       <CardHeader>
-  //         <CardTitle className="flex items-center gap-2">
-  //           <Calendar className="w-6 h-6" />
-  //           Recent Memories
-  //         </CardTitle>
-  //       </CardHeader>
-  //       <CardContent>
-  //         <motion.div
-  //           initial={{ opacity: 0 }}
-  //           animate={{ opacity: 1 }}
-  //           className="space-y-4"
-  //         >
-  //           {recentEntries.map((entry, index) => (
-  //             <motion.div
-  //               key={index}
-  //               initial={{ opacity: 0, y: 20 }}
-  //               animate={{ opacity: 1, y: 0 }}
-  //               transition={{ delay: index * 0.1 }}
-  //               className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800"
-  //             >
-  //               <div className="flex justify-between items-start mb-2">
-  //                 <span className="font-medium">{entry.date}</span>
-  //                 <span className="text-2xl">{entry.mood}</span>
-  //               </div>
-  //               <p className="text-slate-600 dark:text-slate-300">{entry.summary}</p>
-  //             </motion.div>
-  //           ))}
-  //         </motion.div>
-  //       </CardContent>
-  //     </Card>
-      
-  //     <Card>
-  //       <CardHeader>
-  //         <CardTitle className="flex items-center gap-2">
-  //           <Bell className="w-6 h-6" />
-  //           Memory Flashbacks
-  //         </CardTitle>
-  //       </CardHeader>
-  //       <CardContent>
-  //         <motion.div
-  //           initial={{ opacity: 0 }}
-  //           animate={{ opacity: 1 }}
-  //           className="space-y-4"
-  //         >
-  //           {flashbacks.map((flashback, index) => (
-  //             <motion.div
-  //               key={index}
-  //               initial={{ opacity: 0, y: 20 }}
-  //               animate={{ opacity: 1, y: 0 }}
-  //               transition={{ delay: index * 0.1 }}
-  //               className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800"
-  //             >
-  //               <div className="flex items-start gap-3">
-  //                 {flashback.type === 'photo' ? (
-  //                   <Camera className="w-6 h-6 text-blue-500" />
-  //                 ) : (
-  //                   <Music className="w-6 h-6 text-blue-500" />
-  //                 )}
-  //                 <div>
-  //                   <h3 className="font-medium mb-1">{flashback.title}</h3>
-  //                   <p className="text-slate-600 dark:text-slate-300">{flashback.description}</p>
-  //                 </div>
-  //               </div>
-  //             </motion.div>
-  //           ))}
-  //         </motion.div>
-  //       </CardContent>
-  //     </Card>
-  //   </div>
-  // );
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="w-6 h-6" />
-            Recent Memories
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-4"
-          >
-            {memories.map((memory, index) => (
-              <motion.div
-                key={memory.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-medium">{formatDate(memory.date)}</span>
-                  {/* <span className="text-2xl">
-                    {moods.find(m => m.label === memory.mood)?.emoji || '😊'}
-                  </span> */}
-                </div>
-                <p className="text-slate-600 dark:text-slate-300 mb-4">{memory.text}</p>
-                
-                {memory.image && (
-                  <img 
-                    src={memory.image} 
-                    alt="Memory" 
-                    className="w-full max-w-sm rounded-lg shadow-md mb-4" 
-                  />
-                )}
-                
-                {memory.audio && (
-                  <audio controls className="w-full">
-                    <source src={memory.audio} type="audio/wav" />
-                    Your browser does not support the audio element.
-                  </audio>
-                )}
-              </motion.div>
-            ))}
-          </motion.div>
-        </CardContent>
-      </Card>
-
-     <Card>
-      <CardHeader>
-           <CardTitle className="flex items-center gap-2">
-             <Bell className="w-6 h-6" />
-            Memory Flashbacks
-          </CardTitle>
-        </CardHeader>
-         <CardContent>
-           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-4"
-          >
-            {flashbacks.map((flashback, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800"
-              >
-                <div className="flex items-start gap-3">
-                  {flashback.type === 'photo' ? (
-                    <Camera className="w-6 h-6 text-blue-500" />
-                  ) : (
-                    <Music className="w-6 h-6 text-blue-500" />
-                  )}
-                  <div>
-                    <h3 className="font-medium mb-1">{flashback.title}</h3>
-                    <p className="text-slate-600 dark:text-slate-300">{flashback.description}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </CardContent>
-      </Card> 
-
-      
-    </div>
-  );
-};
 
 const NotificationsPanel = () => {
   const notifications = [
