@@ -2,26 +2,27 @@
 
 import React, { useState } from "react";
 import { useEffect } from "react";
-import { Github, ChevronRight } from "lucide-react";
-import { FaGoogle } from "react-icons/fa";
+import { ChevronRight } from "lucide-react";
+// import { FaGoogle } from "react-icons/fa";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 
 
-const loginPage = () => {
+const LoginPage = () => {
 
   const { data: session, status } = useSession();
+  // const router = useRouter();
 
   useEffect(() => {
-    if (status === "authenticated") {
-      console.log("User is authenticated, redirecting...");
+    if (status === "authenticated"&& session?.user) {
+      console.log("User is authenticated, redirecting...",session.user);
       router.push("/dashboard");
     }
   }, [status]);
 
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({});
+  const [, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const router = useRouter();
@@ -64,13 +65,13 @@ const loginPage = () => {
   };
 
 
-  const handleGoogleSignIn = () => {
-    signIn("google", { callbackUrl: "/dashboard" });
-  };
+  // const handleGoogleSignIn = () => {
+  //   signIn("google", { callbackUrl: "/dashboard" });
+  // };
 
-  const handleGithubSignIn = () => {
-    signIn("github", { callbackUrl: "/dashboard" });
-  };
+  // const handleGithubSignIn = () => {
+  //   signIn("github", { callbackUrl: "/dashboard" });
+  // };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -139,7 +140,7 @@ const loginPage = () => {
             </button>
           </form>
           <div className="text-center text-sm text-gray-500">
-            Don't have an account? <Link href="/signup" className="text-blue-600 hover:underline">Sign up</Link>
+            Dont have an account? <Link href="/signup" className="text-blue-600 hover:underline">Sign up</Link>
           </div>
         </div>
       </div>
@@ -147,4 +148,4 @@ const loginPage = () => {
   );
 };
 
-export default loginPage;
+export default LoginPage;

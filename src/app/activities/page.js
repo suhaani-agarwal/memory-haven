@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import * as faceapi from "face-api.js";
+import Image from 'next/image';
 
 const Page = () => {
   const [family, setFamily] = useState([]);
@@ -333,33 +334,7 @@ const loadFamilyMembers = (db) => {
         </div>
       )}
 
-      {/* Gallery Tab */}
-      {/* {activeTab === "gallery" && (
-        <div>
-          <h2 style={{ color: '#007BFF', marginTop: '20px', fontSize: '1.8rem', fontWeight: '500' }}>Family Gallery</h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
-            {family.map((member, index) => (
-              <div key={index} id={`member-${member.name}`} style={{ 
-                backgroundColor: '#fff', 
-                padding: '15px', 
-                borderRadius: '10px', 
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', 
-                textAlign: 'center', 
-                width: matchedMember === member.name ? '250px' : '200px', // Increase size for matched member
-                transform: matchedMember === member.name ? 'scale(1.1)' : 'scale(1)', // Highlight matched member
-                transition: 'transform 0.3s, width 0.3s',
-                border: matchedMember === member.name ? '2px solid #007BFF' : 'none' // Add border for matched member
-              }}>
-                <img src={member.image} alt={member.name} style={{ width: '100%', height: '150px', borderRadius: '10px', objectFit: 'cover' }} />
-                <h3 style={{ marginTop: '10px', color: '#333', fontSize: '1.2rem', fontWeight: '500' }}>{member.name}</h3>
-                <p style={{ color: '#777', fontSize: '0.9rem' }}>{member.relationship}</p>
-                <audio controls src={member.voice} style={{ marginTop: '10px', width: '100%' }} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )} */}
-
+     
 
       {/* Gallery Tab */}
 {activeTab === "gallery" && (
@@ -400,9 +375,11 @@ const loadFamilyMembers = (db) => {
             border: matchedMember === member.name ? '2px solid #007BFF' : 'none'
           }}
         >
-          <img 
+          <Image 
             src={member.image} 
             alt={member.name} 
+            width={300}
+            height={500}
             style={{ 
               width: '100%', 
               height: '150px', 
@@ -445,7 +422,7 @@ const loadFamilyMembers = (db) => {
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', maxWidth: '500px', margin: '0 auto' }}>
             <video ref={videoRef} autoPlay style={{ width: '100%', display: isCameraOn ? 'block' : 'none', borderRadius: '10px' }}></video>
             <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
-            {capturedImage && <img src={capturedImage} alt="Captured" style={{ width: '100%', marginTop: '10px', borderRadius: '10px' }} />}
+            {capturedImage && <Image src={capturedImage} alt="Captured" width={300} height={500} style={{ width: '100%', marginTop: '10px', borderRadius: '10px' }} />}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
               <button onClick={startCamera} style={{ padding: '10px 20px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s' }}>Turn On Camera</button>
               <button onClick={captureImage} style={{ padding: '10px 20px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s' }}>Capture Image</button>

@@ -5,14 +5,14 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { FaUsers, FaBookOpen, FaClipboardList, FaHeartbeat, FaMapMarkerAlt, FaUser } from "react-icons/fa";
+import { FaUsers, FaBookOpen, FaClipboardList, FaHeartbeat, FaMapMarkerAlt} from "react-icons/fa";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
-import { Dialog,DialogTrigger,DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@radix-ui/react-dialog";
+import { Dialog,DialogTrigger,DialogContent, DialogTitle} from "@radix-ui/react-dialog";
 import { CgProfile } from "react-icons/cg";
-import { Settings, notificationSettings } from "lucide-react";
+// import { Settings, notificationSettings } from "lucide-react";
 import { FaUserCircle } from "react-icons/fa";
 import { FaPhone } from "react-icons/fa";
 import { FaSignOutAlt } from "react-icons/fa";

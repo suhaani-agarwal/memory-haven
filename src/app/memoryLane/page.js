@@ -6,15 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Brain, Music, Heart, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const Page = () => {
   const [activeTab, setActiveTab] = useState("memory");
-  const [hobbies, setHobbies] = useState("");
-  const [interests, setInterests] = useState("");
-  const [favoriteMusic, setFavoriteMusic] = useState("");
-  const [favoritePeople, setFavoritePeople] = useState("");
-  
-
   const [color, setColor] = useState("red");
   const [brushSize, setBrushSize] = useState(5);
   const canvasRef = useRef(null);
@@ -161,7 +156,7 @@ const Page = () => {
     try {
       const prompt = generateAIPrompt(formData);
       
-      const { GoogleGenerativeAI } = require("@google/generative-ai");
+      // const { GoogleGenerativeAI } = require("@google/generative-ai");
       const genAI = new GoogleGenerativeAI("AIzaSyC6IKb8_eYclCRNFRSvjABff2GmZc9hHxo");
       const model = genAI.getGenerativeModel({
         model: "gemini-2.0-flash",

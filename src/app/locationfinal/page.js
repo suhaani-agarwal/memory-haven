@@ -17,11 +17,11 @@ const LocationTracker = () => {
   const [isOutOfRange, setIsOutOfRange] = useState(false);
   const [safeRadius, setSafeRadius] = useState(100); // Default 100 meters
   const [emergencyContact, setEmergencyContact] = useState("");
-  const [alertSent, setAlertSent] = useState(false);
+  const [, setAlertSent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const [showNotification, setShowNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState("");
+  const [notificationMessage, ] = useState("");
 
   // Refs
   const sirenRef = useRef(null);
@@ -194,9 +194,11 @@ const LocationTracker = () => {
   };
 
 
-  const showPushNotification = async () => {
+  
+
+  const showPushNotification = useCallback(async () => {
     console.log("Attempting to show push notification");
-    
+  
     if (!homeLocation || !currentLocation) {
       console.log("Missing location data for notification");
       return;
@@ -204,7 +206,7 @@ const LocationTracker = () => {
   
     // Generate Google Maps directions link
     const directionsLink = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${homeLocation.latitude},${homeLocation.longitude}&travelmode=walking`;
-    
+  
     try {
       // Check if the browser supports notifications
       if (!("Notification" in window)) {
@@ -221,11 +223,11 @@ const LocationTracker = () => {
         console.log("Requesting notification permission");
         const permission = await Notification.requestPermission();
         console.log(`Notification permission response: ${permission}`);
-        
+  
         if (permission === "granted") {
           await createNotification(directionsLink);
         } else {
-          console.og("Notification permission not granted");
+          console.log("Notification permission not granted");
           alert("Please enable notifications to receive alerts");
         }
       } else {
@@ -236,7 +238,32 @@ const LocationTracker = () => {
       console.log(`Error showing notification: ${error.message}`);
       console.error("Notification error:", error);
     }
-  };
+  }, [homeLocation, currentLocation]);
+  
+  // // Helper function to create the notification
+  // const createNotification = async (directionsLink) => {
+  //   try {
+  //     const notification = new Notification("Location Alert", {
+  //       body: "You have wandered too far from home. Click for directions back.",
+  //       icon: "/notification-icon.png", // Add an icon in your public folder
+  //       badge: "/notification-badge.png", // Add a badge in your public folder
+  //       vibrate: [200, 100, 200], // Vibration pattern
+  //       tag: "location-alert", // Unique tag for the notification
+  //       requireInteraction: true, // Notification will remain until user interacts
+  //     });
+  
+  //     notification.onclick = function (event) {
+  //       event.preventDefault();
+  //       console.log("Notification clicked - opening directions");
+  //       window.open(directionsLink, "_blank");
+  //     };
+  
+  //     console.log("Notification created successfully");
+  //   } catch (error) {
+  //     console.log(`Error creating notification: ${error.message}`);
+  //     throw error;
+  //   }
+  // };
   
   // Helper function to create the notification
   const createNotification = async (directionsLink) => {
@@ -323,7 +350,7 @@ const LocationTracker = () => {
 
         if (outOfRange) {
           sirenRef.current?.play();
-          sendSMSAlert();
+          // sendSMSAlert();
           showPushNotification();
         } else {
           sirenRef.current?.pause();
@@ -345,7 +372,7 @@ const LocationTracker = () => {
       }
     };
   // }, [homeLocation, safeRadius, calculateDistance, sendSMSAlert]);
-  }, [homeLocation, safeRadius, calculateDistance]);
+  }, [homeLocation, safeRadius, calculateDistance, showPushNotification]);
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">

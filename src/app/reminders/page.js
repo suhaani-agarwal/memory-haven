@@ -1,5 +1,7 @@
 "use client";
+import Image from 'next/image';
 import { useState, useEffect, useRef } from "react";
+
 
 const RemindersPage = () => {
   // Reminders State
@@ -225,7 +227,7 @@ const RemindersPage = () => {
       // Check hydration reminders
       hydrationReminders.forEach((reminder) => {
         if (reminder.time === currentTime) {
-          const message = "It's time to drink water! Please drink 250ml now."; // Fixed 250ml suggestion
+          const message = "Its time to drink water! Please drink 250ml now."; // Fixed 250ml suggestion
           showNotification(message);
 
           // Speak the reminder
@@ -295,7 +297,7 @@ const RemindersPage = () => {
               className={`w-full p-3 border ${darkMode ? "border-gray-600 bg-gray-700 text-white" : "border-gray-300 bg-white text-black"} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200`}
             />
             <input type="file" accept="image/*" onChange={handleImageUpload} />
-            {image && <img src={image} alt="Medicine" className="h-32 w-32 object-cover rounded-lg mt-2 mx-auto" />}
+            {image && <Image src={image} alt="Medicine" className="h-32 w-32 object-cover rounded-lg mt-2 mx-auto" width={300} height={300} />}
 
             {/* Recording Buttons */}
             <div className="flex items-center space-x-2">
@@ -331,7 +333,7 @@ const RemindersPage = () => {
                   </button>
                 </div>
 
-                {reminder.image && <img src={reminder.image} alt="Medicine" className="h-40 w-40 object-cover rounded-lg mx-auto" />}
+                {reminder.image && <Image src={reminder.image} alt="Medicine" className="h-40 w-40 object-cover rounded-lg mx-auto" width={300} height={300} />}
                 {reminder.audio && (
                   <button onClick={() => playAudioWithBuzzer(reminder.audio)} className="bg-gray-800 text-white p-2 rounded-lg w-full hover:bg-gray-900 transition-colors duration-200">
                     🔊 Play Voice Note

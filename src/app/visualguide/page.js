@@ -9,16 +9,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-import { useSearchParams } from "next/navigation";
-
-
-
-
+// import { useSearchParams } from "next/navigation";
+import Image from 'next/image';
 
 const MemoryJournalApp = () => {
   
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
+  // const [isRecording, setIsRecording] = useState(false);
   const [activeTab, setActiveTab] = useState('journal');
   const [showNotification, setShowNotification] = useState(false);
 
@@ -182,8 +179,8 @@ const JournalEntry = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
-  const searchParams = useSearchParams();
-const userId = searchParams.get("userId");
+  // const searchParams = useSearchParams();
+// const userId = searchParams.get("userId");
 
   // Audio recording states
   const [audioURL, setAudioURL] = useState(null);
@@ -191,24 +188,24 @@ const userId = searchParams.get("userId");
   const audioChunksRef = useRef([]);
 
   // Convert base64 to file
-  const base64ToFile = (base64String, filename) => {
-    const arr = base64String.split(',');
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
-  };
+  // const base64ToFile = (base64String, filename) => {
+  //   const arr = base64String.split(',');
+  //   const mime = arr[0].match(/:(.*?);/)[1];
+  //   const bstr = atob(arr[1]);
+  //   let n = bstr.length;
+  //   const u8arr = new Uint8Array(n);
+  //   while (n--) {
+  //     u8arr[n] = bstr.charCodeAt(n);
+  //   }
+  //   return new File([u8arr], filename, { type: mime });
+  // };
 
   // Convert audio URL to file
-  const audioURLToFile = async (audioURL) => {
-    const response = await fetch(audioURL);
-    const blob = await response.blob();
-    return new File([blob], 'audio.wav', { type: 'audio/wav' });
-  };
+  // const audioURLToFile = async (audioURL) => {
+  //   const response = await fetch(audioURL);
+  //   const blob = await response.blob();
+  //   return new File([blob], 'audio.wav', { type: 'audio/wav' });
+  // };
 
 
   // Open Camera
@@ -216,6 +213,7 @@ const userId = searchParams.get("userId");
     setIsCameraOpen(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log(isSubmitting);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
@@ -320,7 +318,7 @@ const userId = searchParams.get("userId");
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl">Today's Memory</CardTitle>
+        <CardTitle className="text-2xl">Todays Memory</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Mood Selection */}
@@ -345,7 +343,7 @@ const userId = searchParams.get("userId");
         {capturedImage && (
           <div className="mt-4">
             <h3 className="text-lg font-semibold">Memory Image:</h3>
-            <img src={capturedImage} alt="Captured" className="w-full max-w-sm rounded-lg shadow-md" />
+            <Image src={capturedImage} alt="Captured" className="w-full max-w-sm rounded-lg shadow-md" width={300} height={300} />
           </div>
         )}
 
@@ -519,10 +517,12 @@ const Dashboard = () => {
                 <p className="text-slate-600 dark:text-slate-300 mb-4">{memory.text}</p>
                 
                 {memory.image && (
-                  <img 
+                  <Image
                     src={memory.image} 
                     alt="Memory" 
                     className="w-full max-w-sm rounded-lg shadow-md mb-4" 
+                    width={500}
+                    height={300}
                   />
                 )}
                 

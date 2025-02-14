@@ -53,13 +53,15 @@ export async function POST(req: Request) {
     });
 
     // Exclude password from response
-    const { password: newUserPassword, ...rest } = newUser;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password:_password, ...rest } = newUser;
 
     return NextResponse.json(
       { user: rest, message: "User created successfully!" },
       { status: 201 }
     );
   } catch (error) {
+    // console.log(_password);
     console.error("Error creating user:", error);
     return NextResponse.json(
       { message: "Something went wrong while creating user!" },

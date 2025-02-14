@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useRef, useEffect } from 'react';
-import { Github, ChevronRight} from 'lucide-react';
-import { FaGoogle } from "react-icons/fa";
+import { ChevronRight} from 'lucide-react';
+// import { FaGoogle } from "react-icons/fa";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -164,6 +164,7 @@ const handleSubmit = async (e) => {
       }
 
   } catch (error) {
+      console.error(error);
       setApiError('An error occurred. Try again later.');
   } finally {
       setIsLoading(false);

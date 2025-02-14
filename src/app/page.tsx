@@ -1,10 +1,10 @@
 
 "use client"
-import Image from "next/image";
+import Image from 'next/image';
 import Link from "next/link";
 
 import React from 'react';
-import { useState } from 'react';
+// import { useState } from 'react';
 import { Heart, Brain, Bell, Users, Star, Play, MapPin } from 'lucide-react';
 
 
@@ -37,22 +37,11 @@ const features = [
 ];
 
 // Testimonial data
-const testimonials = [
-  {
-    quote: "Memory Haven has brought our family closer together. Mom loves seeing daily photos from the grandkids.",
-    author: "Sarah M.",
-    role: "Daughter & Caregiver"
-  },
-  {
-    quote: "The memory journal feature has been incredible. We've discovered so many precious memories.",
-    author: "James T.",
-    role: "Family Member"
-  }
-];
+
 
 export default function Home() {
 
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -80,11 +69,14 @@ export default function Home() {
             </div>
             <div className="lg:w-1/2">
               <div className="relative">
-                <img
-                  src="https://thumbs.dreamstime.com/b/multi-generations-indian-family-portrait-home-asian-people-living-lifestyle-41652913.jpg"
+                <Image
+                  src="/family.png"
                   alt="Elderly person with family"
                   className="rounded-2xl shadow-2xl transform hover:scale-105 transition-transform duration-300"
+                  width='400'
+                  height='300'
                 />
+                
                 <div className="absolute -bottom-4 -right-4 bg-white p-4 rounded-xl shadow-lg">
                   <div className="flex items-center gap-2">
                     <Star className="w-5 h-5 text-yellow-400" />
@@ -171,19 +163,19 @@ export default function Home() {
               "step": "Step 1",
               "title": "Create a Memory Vault",
               "description": "Upload photos, voice notes, and personal stories to keep cherished memories alive.",
-              "image": "./image.png"
+              "image": "/image.png"
             },
             {
               "step": "Step 2",
               "title": "Daily Cognitive Support and Location access for family",
               "description": "Set up personalized reminders for medication, appointments,daily routines and location sharing",
-              "image": "./reminder.png"
+              "image": "/reminder.png"
             },
             {
               "step": "Step 3",
               "title": "Stay Connected with Family",
               "description": "Loved ones can send voice messages, check in, and engage in memory-sharing activities.",
-              "image": "./familytree.png"
+              "image": "/familytree.png"
             }
           
           
@@ -193,10 +185,12 @@ export default function Home() {
               className={`flex items-center ${index % 2 === 0 ? "flex-row" : "flex-row-reverse"}`}
             >
               <div className="w-1/2 flex justify-center">
-                <img
+                <Image
                   src={item.image}
                   alt={item.title}
                   className="w-80 h-auto rounded-lg shadow-lg"
+                  width={300}
+                  height={300}
                 />
               </div>
               <div className="absolute left-1/2 transform -translate-x-1/2 w-4 h-4 bg-blue-600 rounded-full" />
@@ -221,7 +215,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold mb-8">Start Your Memory Haven Journey</h2>
           <p className="text-xl mb-12 max-w-2xl mx-auto">
-            Join thousands of families who've found support, connection, and peace of mind.
+            Join thousands of families who have found support, connection, and peace of mind.
           </p>
           <Link href='/signup'><button className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors transform hover:scale-105">
             Start Now
