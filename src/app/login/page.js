@@ -12,20 +12,20 @@ import { signIn, useSession } from "next-auth/react";
 const LoginPage = () => {
 
   const { data: session, status } = useSession();
-  // const router = useRouter();
+  const router = useRouter();
 
   useEffect(() => {
     if (status === "authenticated"&& session?.user) {
       console.log("User is authenticated, redirecting...",session.user);
       router.push("/dashboard");
     }
-  }, [status]);
+  }, [status,, session?.user, router]);
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
-  const router = useRouter();
+  
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
