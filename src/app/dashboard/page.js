@@ -9,7 +9,7 @@ import { FaUsers, FaBookOpen, FaClipboardList, FaHeartbeat, FaMapMarkerAlt} from
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
 import { Dialog,DialogTrigger,DialogContent, DialogTitle} from "@radix-ui/react-dialog";
 import { CgProfile } from "react-icons/cg";
 // import { Settings, notificationSettings } from "lucide-react";
@@ -20,14 +20,14 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 
 const Page = () => {
-  const { data: session, status } = useSession();
+  // const { data: session, status } = useSession();
 
-  if (status === "loading") {
-    return <p>Loading...</p>; // Prevents accessing undefined session
-  }
+  // if (status === "loading") {
+  //   return <p>Loading...</p>; // Prevents accessing undefined session
+  // }
 
   const UserProfileDialog = () => {
-    const { data: session } = useSession();
+    // const { data: session } = useSession();
   
     const emergencyContact = {
       name: "Mary Smith",
@@ -62,10 +62,12 @@ const Page = () => {
               <FaUserCircle className="w-16 h-16 text-blue-600" />
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  {session?.user?.name || "User"}
+                  {/* {session?.user?.name || "User"} */}
+                  { "User"}
                 </h2>
                 <p className="text-gray-600 text-lg">
-                  {session?.user?.email}
+                  {/* {session?.user?.email} */}
+                  
                 </p>
               </div>
             </div>
@@ -112,7 +114,7 @@ const Page = () => {
       <div className="w-72 bg-slate-50 text-slate-800 p-6 shadow-lg">
         <div className="flex items-center gap-3 mb-8">
           <FaHeartbeat className="text-blue-600 text-3xl" />
-          <h2 className="text-2xl font-semibold text-slate-800">Care Compass</h2>
+          <h2 className="text-2xl font-semibold text-slate-800">Memory Haven</h2>
         </div>
 
         <ul className="space-y-3 text-lg">
@@ -161,9 +163,12 @@ const Page = () => {
 
             {/* Profile and Logout */}
             <div className="flex items-center gap-4">
-            <Button variant="outline" onClick={() => signOut()} className="border-red-200 text-red-600 hover:bg-red-50">
+            {/* <Button variant="outline" onClick={() => signOut()} className="border-red-200 text-red-600 hover:bg-red-50">
               Sign Out
-            </Button>
+            </Button> */}
+            <Link href='/'><Button variant="outline"  className="border-red-200 text-red-600 hover:bg-red-50">
+              Sign Out
+            </Button></Link>
             <UserProfileDialog />
           </div>
           </div>
@@ -171,7 +176,7 @@ const Page = () => {
 
         {/* Main Content Area */}
         <div className="max-w-7xl mx-auto p-6">
-          <h1 className="text-3xl font-semibold text-slate-800 mb-6">Welcome to Your Care Dashboard {session.user?.email}!</h1>
+          <h1 className="text-3xl font-semibold text-slate-800 mb-6">Welcome to Your Care Dashboard !</h1>
 
           {/* Featured Section - Location Safety */}
           <Card className="p-6 mb-8 bg-gradient-to-r from-blue-50 to-blue-100">
