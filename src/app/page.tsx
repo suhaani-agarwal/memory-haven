@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import React from 'react';
 import { useState } from 'react';
-import { Heart, Brain, Bell, Users, ChevronRight, Star, Play } from 'lucide-react';
+import { Heart, Brain, Bell, Users, Star, Play, MapPin } from 'lucide-react';
 
 
 const features = [
@@ -28,7 +28,12 @@ const features = [
     icon: <Users className="w-8 h-8" />,
     title: "Family Connect",
     description: "Share moments and updates with loved ones effortlessly."
-  }
+  },
+  {
+    "icon": <MapPin className="w-8 h-8" />,
+    "title": "Safe Zone Alerts",
+    "description": "Get instant alerts if a loved one wanders beyond a safe area, with real-time location tracking and SMS notifications."
+}
 ];
 
 // Testimonial data
@@ -97,7 +102,7 @@ export default function Home() {
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-gray-700 text-center mb-16">How We Support You</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-8">
             {features.map((feature, index) => (
               <div
                 key={index}
@@ -161,24 +166,27 @@ export default function Home() {
       <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-blue-200" />
       <div className="space-y-12">
         {[
-          {
-            step: "Step 1",
-            title: "Download & Setup",
-            description: "Get started in just 2 minutes",
-            image: "/images/step1.png"
-          },
-          {
-            step: "Step 2",
-            title: "Personalize Your Experience",
-            description: "Set reminders, add photos, and more",
-            image: "/images/step2.png"
-          },
-          {
-            step: "Step 3",
-            title: "Connect with Loved Ones",
-            description: "Your family members get notified and can send love back",
-            image: "/images/step3.png"
-          }
+          
+            {
+              "step": "Step 1",
+              "title": "Create a Memory Vault",
+              "description": "Upload photos, voice notes, and personal stories to keep cherished memories alive.",
+              "image": "./image.png"
+            },
+            {
+              "step": "Step 2",
+              "title": "Daily Cognitive Support and Location access for family",
+              "description": "Set up personalized reminders for medication, appointments,daily routines and location sharing",
+              "image": "./reminder.png"
+            },
+            {
+              "step": "Step 3",
+              "title": "Stay Connected with Family",
+              "description": "Loved ones can send voice messages, check in, and engage in memory-sharing activities.",
+              "image": "./familytree.png"
+            }
+          
+          
         ].map((item, index) => (
           <div key={index} className="relative">
             <div
@@ -215,9 +223,9 @@ export default function Home() {
           <p className="text-xl mb-12 max-w-2xl mx-auto">
             Join thousands of families who've found support, connection, and peace of mind.
           </p>
-          <button className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors transform hover:scale-105">
-            Download Now
-          </button>
+          <Link href='/signup'><button className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition-colors transform hover:scale-105">
+            Start Now
+          </button></Link>
         </div>
       </section>
     </div>

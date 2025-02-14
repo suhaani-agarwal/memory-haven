@@ -63,6 +63,9 @@ model User {
   password       String?
   image          String?
   emailVerified  DateTime? @default(now())
+  phoneNumber     String?  @unique
+  isPhoneVerified Boolean  @default(false)
+  verificationCode String? // Stores OTP temporarily
   accounts       Account[]
   sessions       Session[]
   memories       Memory[] @relation("UserMemories")

@@ -1,117 +1,4 @@
-// "use client";
-// import React from "react";
-// import Image from "next/image";
-// import Link from "next/link";
-// import { FaUsers, FaBookOpen, FaClipboardList, FaHeartbeat } from "react-icons/fa";
-// import { signOut } from "next-auth/react";
-// import { Button } from "@/components/ui/button";
 
-
-// const Page = () => {
-//   return (
-//     <div className="flex min-h-screen">
-//       {/* Sidebar */}
-//       <div className="w-64 bg-[#E6E6FA] text-gray-800 p-5 shadow-lg">
-//         <h2 className="text-2xl font-bold text-gray-800">Memory Haven</h2>
-//         <ul className="mt-8 space-y-4 text-lg">
-//           <li className="p-4 bg-[#D8BFD8] hover:bg-[#C5A3C5] rounded-lg flex items-center gap-3">
-//             <FaUsers size={24} />
-//             <Link href="/dashboard">My Family</Link>
-//           </li>
-//           <li className="p-4 bg-[#D8BFD8] hover:bg-[#C5A3C5] rounded-lg flex items-center gap-3">
-//             <FaBookOpen size={24} />
-//             <Link href="/dashboard/memoryLane">Memory Journal</Link>
-//           </li>
-//           <li className="p-4 bg-[#D8BFD8] hover:bg-[#C5A3C5] rounded-lg flex items-center gap-3">
-//             <FaClipboardList size={24} />
-//             <Link href="/dashboard/reminders">Activity & Reminders</Link>
-//           </li>
-//           <li className="p-4 bg-[#D8BFD8] hover:bg-[#C5A3C5] rounded-lg flex items-center gap-3">
-//             <FaHeartbeat size={24} />
-//             <Link href="/dashboard/health">Health & Hydration</Link>
-//           </li>
-//         </ul>
-//       </div>
-
-//       {/* Main Content */}
-//       <div className="flex-1 bg-[#FBEAFF] p-5">
-//         <h1 className="text-4xl font-bold text-[#9463F7]">Welcome to Memory Haven! </h1>
-//         <p className="mt-4 text-xl text-gray-700">
-//           A place to cherish your memories and maintain a healthy routine.
-//         </p>
-//         <Button 
-//             variant="destructive" 
-//             onClick={() => signOut()}
-//             className="bg-blue-600 hover:bg-blue-700"
-//           >
-//             Logout
-//           </Button>
-
-//         {/* Cards Section */}
-//         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-8">
-//           {[
-//             {
-//               title: "My Family",
-//               description: "Stay connected with loved ones.",
-//               link: "/activities",
-//               image: "https://media.istockphoto.com/id/505229559/photo/memory-lane-in-sepia.jpg?s=612x612&w=0&k=20&c=UDJqmbJbV4hNgXQOAdJs0wCRcmgtwTFJzupR4KMMrPM="
-//             },
-//             {
-//               title: "Memory Journal",
-//               description: "Record precious memories easily.",
-//               link: "/visualguide",
-//               image: "https://images.squarespace-cdn.com/content/v1/55d35604e4b08af97dadd334/1293a7f0-f1f0-4f46-9736-efd2806e555a/i-remember-journal-for-memory-keeping.jpg"
-//             },
-//             {
-//               title: "Activity & Reminders",
-//               description: "Plan your daily activities effortlessly.",
-//               link: "/memoryLane",
-//               image: "https://www.shutterstock.com/image-vector/brain-training-rock-muscles-barbell-600nw-757605628.jpg"
-//             },
-//             {
-//               title: "Health & Hydration",
-//               description: "Track your wellness with ease.",
-//               link: "/reminders",
-//               image: "https://media.istockphoto.com/id/1309339353/vector/old-man-and-medicine-illustration.jpg?s=612x612&w=0&k=20&c=wt5CK1OFxXQ9UiIkW0FZ5NcyJnRWA9S2fLmeHZ3sVT4="
-              
-//             }
-//           ].map((card, index) => (
-//             <div
-//               key={index}
-//               className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
-//             >
-//               <h2 className="text-2xl font-bold text-gray-800">{card.title}</h2>
-//               <p className="text-gray-600 text-lg mt-2">{card.description}</p>
-
-//               {/* Updated Image Container */}
-//               <div className="relative w-full h-64 mt-4 rounded-xl overflow-hidden">
-//                 <Image
-//                   src={card.image}
-//                   alt={card.title}
-//                   width={500}
-//                   height={256}  
-//                   className="w-full h-full object-cover rounded-xl"
-//                   priority
-//                 />
-//               </div>
-
-//               <div className="mt-6 text-center">
-//                 <Link
-//                   href={card.link}
-//                   className="text-xl bg-[#C3A2F7] text-white px-6 py-3 rounded-lg hover:bg-[#D3BFF9]"
-//                 >
-//                   Explore →
-//                 </Link>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Page;
 
 
 "use client";
@@ -230,27 +117,27 @@ const Page = () => {
 
         <ul className="space-y-3 text-lg">
           <li className="rounded-lg overflow-hidden">
-            <Link href="/dashboard" className="flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
+            <Link href="/activities" className="flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
               <FaUsers size={24} className="text-blue-600" />
-              <span className="font-medium">Family Circle</span>
+              <span className="font-medium">My Family</span>
             </Link>
           </li>
           <li className="rounded-lg overflow-hidden">
-            <Link href="/dashboard/memoryLane" className="flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
+            <Link href="/visualguide" className="flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
               <FaBookOpen size={24} className="text-blue-600" />
               <span className="font-medium">Daily Journal</span>
             </Link>
           </li>
           <li className="rounded-lg overflow-hidden">
-            <Link href="/dashboard/reminders" className="flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
+            <Link href="/reminders" className="flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
               <FaClipboardList size={24} className="text-blue-600" />
               <span className="font-medium">Daily Schedule</span>
             </Link>
           </li>
           <li className="rounded-lg overflow-hidden">
-            <Link href="/dashboard/health" className="flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
+            <Link href="/memoryLane" className="flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 transition-colors">
               <FaHeartbeat size={24} className="text-blue-600" />
-              <span className="font-medium">Health Track</span>
+              <span className="font-medium">Mindful Moments</span>
             </Link>
           </li>
         </ul>
@@ -294,13 +181,13 @@ const Page = () => {
                 <p className="text-slate-600 text-lg mb-4">
                   Your safety zone is set to 100 meters around your home. Family will be notified if you go beyond this area.
                 </p>
-                <Button className="bg-blue-600 hover:bg-blue-700">
+                <Link href='/locationfinal'><Button className="bg-blue-600 hover:bg-blue-700">
                   Check Location Settings
-                </Button>
+                </Button></Link>
               </div>
               <div className="hidden md:block w-1/3">
                 <Image
-                  src="/map-placeholder.jpg"
+                  src="/map.png"
                   alt="Location Map"
                   width={300}
                   height={200}
@@ -314,28 +201,32 @@ const Page = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
               {
-                title: "Family Circle",
-                description: "Stay connected with your loved ones and caregivers.",
+                title: "My Family",
+                description: "Stay connected with your loved ones and caregivers.",          
                 icon: <FaUsers className="text-4xl text-blue-600" />,
-                link: "/family"
+                image:"/familytree.png",
+                link: "/activities"
               },
               {
                 title: "Daily Journal",
                 description: "Record your daily activities and memories.",
                 icon: <FaBookOpen className="text-4xl text-blue-600" />,
+                image:"/image.png",
                 link: "/visualguide"
               },
               {
                 title: "Daily Schedule",
                 description: "Keep track of your medications and appointments.",
                 icon: <FaClipboardList className="text-4xl text-blue-600" />,
-                link: "/schedule"
+                image:"/reminder.png",
+                link: "/reminders"
               },
               {
-                title: "Health Track",
-                description: "Monitor your health and medication schedule.",
+                title: "Mindful Moments",
+                description: "Engaging, personalized activities to spark joy and strengthen memory.",
                 icon: <FaHeartbeat className="text-4xl text-blue-600" />,
-                link: "/health"
+                image:"/activity.png",
+                link: "/memoryLane"
               }
             ].map((feature, index) => (
               <Card key={index} className="p-6 hover:shadow-lg transition-shadow">
@@ -353,6 +244,7 @@ const Page = () => {
                       Open {feature.title} →
                     </Link>
                   </div>
+                  <div><Image src={feature.image} width='300' height='300' alt="image"></Image></div>
                 </div>
               </Card>
             ))}
