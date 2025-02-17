@@ -1,41 +1,84 @@
+
+
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MapPin, Phone, Bell, Home } from "lucide-react";
+import { MapPin, Phone, Bell, Home, Navigation } from "lucide-react";
 import { Save } from "lucide-react";
-
-
+import Link from "next/link";
 
 const LocationTracker = () => {
-  // State for location tracking
   const [currentLocation, setCurrentLocation] = useState(null);
   const [homeLocation, setHomeLocation] = useState(null);
+  const [manualLatitude, setManualLatitude] = useState("");
+  const [manualLongitude, setManualLongitude] = useState("");
   const [distance, setDistance] = useState(null);
   const [isOutOfRange, setIsOutOfRange] = useState(false);
-  const [safeRadius, setSafeRadius] = useState(100); // Default 100 meters
+  const [safeRadius, setSafeRadius] = useState(100);
   const [emergencyContact, setEmergencyContact] = useState("");
-  const [, setAlertSent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
   const [showNotification, setShowNotification] = useState(false);
-  const [notificationMessage, ] = useState("");
+  const [showDirections, setShowDirections] = useState(false);
+  const [sirenPlaying, setSirenPlaying] = useState(false);
 
-  // Refs
   const sirenRef = useRef(null);
   const watchIdRef = useRef(null);
 
-
+  // Load saved contact on mount
   useEffect(() => {
     const savedContact = localStorage.getItem("emergencyContact");
     if (savedContact) {
       setEmergencyContact(savedContact);
     }
+    
+    const savedRadius = localStorage.getItem("safeRadius");
+    if (savedRadius) {
+      setSafeRadius(Number(savedRadius));
+    }
   }, []);
 
-  // Save emergency contact to localStorage
+  // Initialize siren audio
+  useEffect(() => {
+    sirenRef.current = new Audio("/alert-siren.mp3");
+    sirenRef.current.loop = true;
+
+    return () => {
+      if (sirenRef.current) {
+        sirenRef.current.pause();
+        sirenRef.current = null;
+      }
+    };
+  }, []);
+
+  // Function to play siren only after user interaction
+  const playSiren = useCallback(() => {
+    if (sirenRef.current && !sirenPlaying) {
+      sirenRef.current.currentTime = 0;
+      sirenRef.current.play()
+        .then(() => {
+          setSirenPlaying(true);
+        })
+        .catch(e => {
+          console.error("Error playing siren:", e);
+        });
+    }
+  }, [sirenPlaying]);
+
+  // Function to stop siren
+  const stopSiren = useCallback(() => {
+    if (sirenRef.current) {
+      sirenRef.current.pause();
+      sirenRef.current.currentTime = 0;
+      setSirenPlaying(false);
+    }
+    setIsOutOfRange(false);
+    setShowNotification(false);
+    setShowDirections(false);
+  }, []);
+
   const saveEmergencyContact = async () => {
     if (!emergencyContact) {
       alert("Please enter a valid phone number.");
@@ -44,18 +87,14 @@ const LocationTracker = () => {
 
     setIsSaving(true);
     try {
-      // Validate the phone number format (you can adjust the regex as needed)
       const phoneRegex = /^\+?[\d\s-]{10,}$/;
       if (!phoneRegex.test(emergencyContact)) {
         throw new Error("Please enter a valid phone number with country code.");
       }
 
-      // Save to localStorage
       localStorage.setItem("emergencyContact", emergencyContact);
       localStorage.setItem("safeRadius", safeRadius.toString());
 
-      // You might want to validate the number by sending a test SMS here
-      // For now, we'll just show a success message
       alert("Emergency contact and safe radius saved successfully!");
     } catch (error) {
       alert(error.message || "Error saving emergency contact. Please try again.");
@@ -64,9 +103,8 @@ const LocationTracker = () => {
     }
   };
 
-  // Memoized calculation function
   const calculateDistance = useCallback((lat1, lon1, lat2, lon2) => {
-    const R = 6371e3; // Earth's radius in meters
+    const R = 6371e3;
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -77,15 +115,18 @@ const LocationTracker = () => {
       Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    return R * c; // Distance in meters
+    return R * c;
   }, []);
 
-  // Load home location on mount only
+  // Load home location on mount
   useEffect(() => {
     const savedHome = localStorage.getItem("homeLocation");
     if (savedHome) {
       try {
-        setHomeLocation(JSON.parse(savedHome));
+        const parsed = JSON.parse(savedHome);
+        setHomeLocation(parsed);
+        setManualLatitude(parsed.latitude.toString());
+        setManualLongitude(parsed.longitude.toString());
       } catch (error) {
         console.error("Error parsing saved home location:", error);
         localStorage.removeItem("homeLocation");
@@ -93,86 +134,64 @@ const LocationTracker = () => {
     }
   }, []);
 
-  // Initialize audio on mount
-  useEffect(() => {
-    sirenRef.current = new Audio("/alert-siren.mp3");
-    return () => {
-      if (sirenRef.current) {
-        sirenRef.current.pause();
-        sirenRef.current = null;
-      }
-    };
-  }, []);
-
-  // Set current location as home location
   const setCurrentAsHome = useCallback(() => {
     if (currentLocation) {
       setHomeLocation(currentLocation);
+      setManualLatitude(currentLocation.latitude.toString());
+      setManualLongitude(currentLocation.longitude.toString());
       localStorage.setItem("homeLocation", JSON.stringify(currentLocation));
     }
   }, [currentLocation]);
 
+  const setManualHomeLocation = () => {
+    const lat = parseFloat(manualLatitude);
+    const lng = parseFloat(manualLongitude);
+    
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      alert("Please enter valid coordinates. Latitude: -90 to 90, Longitude: -180 to 180");
+      return;
+    }
 
-  // const sendSMSAlert = async () => {
-  //   if (!emergencyContact || alertSent || !currentLocation) return;
-  
-  //   try {
-  //     const response = await fetch('/api/send-alert', {
-  //       method: 'POST', // Ensure this is POST
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         to: emergencyContact,
-  //         message: `ALERT: Your family member has wandered ${distance?.toFixed(
-  //           0
-  //         )} meters away from home. Current location: https://www.google.com/maps?q=${
-  //           currentLocation.latitude
-  //         },${currentLocation.longitude}`,
-  //       }),
-  //     });
-  
-  //     if (!response.ok) {
-  //       throw new Error('Failed to send SMS alert.');
-  //     }
-  
-  //     const data = await response.json();
-  //     console.log('SMS alert sent:', data);
-  //   } catch (error) {
-  //     console.error('Error sending SMS:', error);
-  //   }
-  // };
+    const newHomeLocation = {
+      latitude: lat,
+      longitude: lng
+    };
 
-  // const showPushNotification = () => {
-  //   if (!homeLocation || !currentLocation) return;
+    setHomeLocation(newHomeLocation);
+    localStorage.setItem("homeLocation", JSON.stringify(newHomeLocation));
 
-  //   // Generate Google Maps directions link
-  //   const directionsLink = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${homeLocation.latitude},${homeLocation.longitude}&travelmode=walking`;
+    // Recalculate distance and check range if current location exists
+    if (currentLocation) {
+      const newDistance = calculateDistance(
+        currentLocation.latitude,
+        currentLocation.longitude,
+        lat,
+        lng
+      );
+      setDistance(newDistance);
 
-  //   // Check if the browser supports notifications
-  //   if (!("Notification" in window)) {
-  //     alert("This browser does not support desktop notifications.");
-  //     return;
-  //   }
+      const outOfRange = newDistance > safeRadius;
+      if (outOfRange && !isOutOfRange) {
+        setIsOutOfRange(true);
+        setShowNotification(true);
+        setShowDirections(true);
+        showSimpleNotification();
+      } else if (!outOfRange && isOutOfRange) {
+        stopSiren();
+      }
+    }
+  };
 
-  //   // Request permission for notifications
-  //   if (Notification.permission === "granted") {
-  //     new Notification("Follow this map to reach your home!", {
-  //       body: `Click here for directions: ${directionsLink}`,
-  //     });
-  //   } else if (Notification.permission !== "denied") {
-  //     Notification.requestPermission().then((permission) => {
-  //       if (permission === "granted") {
-  //         new Notification("Follow this map to reach your home!", {
-  //           body: `Click here for directions: ${directionsLink}`,
-  //         });
-  //       }
-  //     });
-  //   }
-  // };
+  // Function to generate Google Maps direction URL
+  const getDirectionsUrl = useCallback(() => {
+    if (currentLocation && homeLocation) {
+      return `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${homeLocation.latitude},${homeLocation.longitude}&travelmode=walking`;
+    }
+    return '';
+  }, [currentLocation, homeLocation]);
 
-
-  const WebsiteNotification = ({ message, isVisible, onClose }) => {
+  // Simple notification component
+  const WebsiteNotification = ({ isVisible, onClose }) => {
     if (!isVisible) return null;
   
     return (
@@ -180,7 +199,19 @@ const LocationTracker = () => {
         <Alert className="bg-red-100 border-red-400">
           <Bell className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
-            {message}
+            Alert: Person has wandered too far from home!
+            {homeLocation && currentLocation && (
+              <div className="mt-2">
+                <a 
+                  href={getDirectionsUrl()} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center text-blue-600 hover:text-blue-800"
+                >
+                  <Navigation className="w-4 h-4 mr-1 text-blue-600" /> Get directions to home
+                </a>
+              </div>
+            )}
           </AlertDescription>
           <button 
             onClick={onClose}
@@ -193,103 +224,38 @@ const LocationTracker = () => {
     );
   };
 
-
-  
-
-  const showPushNotification = useCallback(async () => {
-    console.log("Attempting to show push notification");
-  
-    if (!homeLocation || !currentLocation) {
-      console.log("Missing location data for notification");
+  const showSimpleNotification = useCallback(() => {
+    if (!("Notification" in window)) {
+      console.log("Browser does not support notifications");
       return;
     }
-  
-    // Generate Google Maps directions link
-    const directionsLink = `https://www.google.com/maps/dir/?api=1&origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${homeLocation.latitude},${homeLocation.longitude}&travelmode=walking`;
-  
-    try {
-      // Check if the browser supports notifications
-      if (!("Notification" in window)) {
-        console.log("Browser does not support notifications");
-        alert("This browser does not support desktop notifications");
-        return;
-      }
-  
-      // Handle different permission states
-      if (Notification.permission === "granted") {
-        console.log("Notification permission already granted");
-        await createNotification(directionsLink);
-      } else if (Notification.permission !== "denied") {
-        console.log("Requesting notification permission");
-        const permission = await Notification.requestPermission();
-        console.log(`Notification permission response: ${permission}`);
-  
-        if (permission === "granted") {
-          await createNotification(directionsLink);
-        } else {
-          console.log("Notification permission not granted");
-          alert("Please enable notifications to receive alerts");
-        }
-      } else {
-        console.log("Notifications are denied by user");
-        alert("Please enable notifications in your browser settings to receive alerts");
-      }
-    } catch (error) {
-      console.log(`Error showing notification: ${error.message}`);
-      console.error("Notification error:", error);
-    }
-  }, [homeLocation, currentLocation]);
-  
-  // // Helper function to create the notification
-  // const createNotification = async (directionsLink) => {
-  //   try {
-  //     const notification = new Notification("Location Alert", {
-  //       body: "You have wandered too far from home. Click for directions back.",
-  //       icon: "/notification-icon.png", // Add an icon in your public folder
-  //       badge: "/notification-badge.png", // Add a badge in your public folder
-  //       vibrate: [200, 100, 200], // Vibration pattern
-  //       tag: "location-alert", // Unique tag for the notification
-  //       requireInteraction: true, // Notification will remain until user interacts
-  //     });
-  
-  //     notification.onclick = function (event) {
-  //       event.preventDefault();
-  //       console.log("Notification clicked - opening directions");
-  //       window.open(directionsLink, "_blank");
-  //     };
-  
-  //     console.log("Notification created successfully");
-  //   } catch (error) {
-  //     console.log(`Error creating notification: ${error.message}`);
-  //     throw error;
-  //   }
-  // };
-  
-  // Helper function to create the notification
-  const createNotification = async (directionsLink) => {
-    try {
-      const notification = new Notification("Location Alert", {
-        body: "You have wandered too far from home. Click for directions back.",
-        icon: "/notification-icon.png", // Add an icon in your public folder
-        badge: "/notification-badge.png", // Add a badge in your public folder
-        vibrate: [200, 100, 200], // Vibration pattern
-        tag: "location-alert", // Unique tag for the notification
-        requireInteraction: true, // Notification will remain until user interacts
-      });
-  
-      notification.onclick = function(event) {
-        event.preventDefault();
-        console.log("Notification clicked - opening directions");
-        window.open(directionsLink, '_blank');
-      };
-  
-      console.log("Notification created successfully");
-    } catch (error) {
-      console.log(`Error creating notification: ${error.message}`);
-      throw error;
-    }
-  };
 
+    if (Notification.permission === "granted") {
+      const notification = new Notification("Location Alert", {
+        body: "Person has wandered too far from home! Click for directions back home.",
+        icon: "/notification-icon.png",
+        tag: "location-alert",
+      });
+      
+      notification.onclick = function() {
+        window.open(getDirectionsUrl(), '_blank');
+      };
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          const notification = new Notification("Location Alert", {
+            body: "Person has wandered too far from home! Click for directions back home.",
+            icon: "/notification-icon.png",
+            tag: "location-alert",
+          });
+          
+          notification.onclick = function() {
+            window.open(getDirectionsUrl(), '_blank');
+          };
+        }
+      });
+    }
+  }, [getDirectionsUrl]);
 
   const simulateOutOfRange = () => {
     if (!homeLocation) {
@@ -297,15 +263,13 @@ const LocationTracker = () => {
       return;
     }
   
-    // Set a fake current location far away from home
     const fakeLocation = {
-      latitude: homeLocation.latitude + 0.01, // Adjust this value to simulate distance
-      longitude: homeLocation.longitude + 0.01, // Adjust this value to simulate distance
+      latitude: homeLocation.latitude + 0.01,
+      longitude: homeLocation.longitude + 0.01,
     };
   
     setCurrentLocation(fakeLocation);
   
-    // Calculate distance
     const dist = calculateDistance(
       homeLocation.latitude,
       homeLocation.longitude,
@@ -314,15 +278,13 @@ const LocationTracker = () => {
     );
     setDistance(dist);
   
-    // Trigger out-of-range behavior
     setIsOutOfRange(true);
-    sirenRef.current?.play();
-    // sendSMSAlert();
-    showPushNotification();
+    setShowNotification(true);
+    setShowDirections(true);
+    showSimpleNotification();
+    playSiren();
   };
 
-
-  // Location tracking effect
   useEffect(() => {
     if (!("geolocation" in navigator)) {
       console.error("Geolocation is not supported");
@@ -346,16 +308,14 @@ const LocationTracker = () => {
         setDistance(dist);
 
         const outOfRange = dist > safeRadius;
-        setIsOutOfRange(outOfRange);
-
-        if (outOfRange) {
-          sirenRef.current?.play();
-          // sendSMSAlert();
-          showPushNotification();
-        } else {
-          sirenRef.current?.pause();
-          if (sirenRef.current) sirenRef.current.currentTime = 0;
-          setAlertSent(false);
+        
+        if (outOfRange && !isOutOfRange) {
+          setIsOutOfRange(true);
+          setShowNotification(true);
+          setShowDirections(true);
+          showSimpleNotification();
+        } else if (!outOfRange && isOutOfRange) {
+          stopSiren();
         }
       }
     };
@@ -371,20 +331,36 @@ const LocationTracker = () => {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
     };
-  // }, [homeLocation, safeRadius, calculateDistance, sendSMSAlert]);
-  }, [homeLocation, safeRadius, calculateDistance, showPushNotification]);
+  }, [homeLocation, safeRadius, calculateDistance, showSimpleNotification, isOutOfRange, stopSiren, playSiren]);
+
+  useEffect(() => {
+    const requestNotificationPermission = () => {
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    };
+
+    document.addEventListener('click', requestNotificationPermission, { once: true });
+    
+    return () => {
+      document.removeEventListener('click', requestNotificationPermission);
+    };
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
-
-<WebsiteNotification
-        message={notificationMessage}
+      <WebsiteNotification
         isVisible={showNotification}
         onClose={() => setShowNotification(false)}
       />
 
-
       <Card>
+        <Link href='/dashboard'>
+          <Button className="flex items-center gap-2">
+            <Home className="w-4 h-4" />
+            Back to dashboard
+          </Button>
+        </Link>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Phone className="w-6 h-6" />
@@ -422,7 +398,6 @@ const LocationTracker = () => {
         </CardContent>
       </Card>
 
-      {/* Location Status */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -444,51 +419,129 @@ const LocationTracker = () => {
             </div>
           )}
 
-          {homeLocation && (
-            <div className="space-y-2">
-              <p>
-                Home Location: {homeLocation.latitude.toFixed(6)},{" "}
-                {homeLocation.longitude.toFixed(6)}
-              </p>
-              {distance && <p>Distance from home: {distance.toFixed(0)} meters</p>}
+          <div className="space-y-4">
+            {homeLocation && (
+              <div className="space-y-2">
+                <p>
+                  Home Location: {homeLocation.latitude.toFixed(6)},{" "}
+                  {homeLocation.longitude.toFixed(6)}
+                </p>
+                {distance && <p>Distance from home: {distance.toFixed(0)} meters</p>}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+              <label className="text-sm text-gray-600">Manual Home Location</label>
+                <Input
+                  type="text"
+                  placeholder="Latitude (e.g., 51.5074)"
+                  value={manualLatitude}
+                  onChange={(e) => setManualLatitude(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-600">&nbsp;</label>
+                <Input
+                  type="text"
+                  placeholder="Longitude (e.g., -0.1278)"
+                  value={manualLongitude}
+                  onChange={(e) => setManualLongitude(e.target.value)}
+                />
+              </div>
             </div>
-          )}
+            <Button 
+              onClick={setManualHomeLocation}
+              className="w-full flex items-center gap-2"
+            >
+              <MapPin className="w-4 h-4" />
+              Set Manual Home Location
+            </Button>
+          </div>
 
           {isOutOfRange && (
             <Alert variant="destructive">
               <Bell className="w-4 h-4" />
               <AlertDescription>
-                Person has wandered {distance?.toFixed(0)} meters away from home!
+                <div>
+                  Person has wandered {distance?.toFixed(0)} meters away from home!
+                </div>
+                {homeLocation && currentLocation && (
+                  <div className="mt-2">
+                    <a 
+                      href={getDirectionsUrl()} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center text-white hover:text-gray-200"
+                    >
+                      <Navigation className="w-4 h-4 mr-1" /> Get directions to home
+                    </a>
+                  </div>
+                )}
               </AlertDescription>
             </Alert>
           )}
 
-
-          <Button onClick={simulateOutOfRange} className="mt-4">
-            Simulate Out of Range
-          </Button>
-
-
+          <div className="flex gap-4">
+            <Button onClick={simulateOutOfRange} className="mt-4">
+              Simulate Out of Range
+            </Button>
+            {isOutOfRange && (
+              <Button onClick={stopSiren} className="mt-4" variant="destructive">
+                Stop Siren
+              </Button>
+            )}
+            {isOutOfRange && !sirenPlaying && (
+              <Button onClick={playSiren} className="mt-4 bg-yellow-500 hover:bg-yellow-600">
+                Start Siren
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Map View */}
       {currentLocation && (
         <Card>
           <CardHeader>
-            <CardTitle>Location Map</CardTitle>
+            <CardTitle>
+              {showDirections ? "Directions Back Home" : "Location Map"}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="w-full h-96 bg-slate-100 rounded-lg">
-              <iframe
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                style={{ border: 0 }}
-                src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${currentLocation.latitude},${currentLocation.longitude}`}
-                allowFullScreen
-              />
+              {showDirections && homeLocation ? (
+                <iframe
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  style={{ border: 0 }}
+                  src={`https://www.google.com/maps/embed/v1/directions?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&origin=${currentLocation.latitude},${currentLocation.longitude}&destination=${homeLocation.latitude},${homeLocation.longitude}&mode=walking`}
+                  allowFullScreen
+                />
+              ) : (
+                <iframe
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  style={{ border: 0 }}
+                  src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${currentLocation.latitude},${currentLocation.longitude}`}
+                  allowFullScreen
+                />
+              )}
             </div>
+            {showDirections && homeLocation && (
+              <div className="mt-4">
+                <a 
+                  href={getDirectionsUrl()} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center justify-center w-full p-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                >
+                  <Navigation className="w-4 h-4 mr-2" /> 
+                  Open directions in Google Maps
+                </a>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -497,5 +550,3 @@ const LocationTracker = () => {
 };
 
 export default LocationTracker;
-
-
