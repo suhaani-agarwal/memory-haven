@@ -458,13 +458,11 @@ const Page = () => {
   const [phoneNumber, setPhoneNumber] = useState(""); // New state for phone number
   const [image, setImage] = useState(null);
   const [voice, setVoice] = useState(null);
-  const [isCameraOn, setIsCameraOn] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [matchedMember, setMatchedMember] = useState(null);
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState("info");
   const [isLoading, setIsLoading] = useState(false);
-  const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -517,26 +515,15 @@ const Page = () => {
     setFamily(updatedFamily);
   };
 
-  const startCamera = async () => {
-    try {
-      setIsCameraOn(true);
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoRef.current.srcObject = stream;
-    } catch (error) {
-      console.error("Error accessing camera:", error);
-      alert("Unable to access the camera. Please ensure permissions are granted.");
+  const handleCaptureImage = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCapturedImage(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
-  };
-
-  const captureImage = () => {
-    if (!videoRef.current) return;
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    const capturedDataUrl = canvas.toDataURL("image/png");
-    setCapturedImage(capturedDataUrl);
   };
 
   const matchFace = async () => {
@@ -728,12 +715,10 @@ const Page = () => {
         <div>
           <h2 style={{ color: '#007BFF', marginTop: '20px', fontSize: '1.8rem', fontWeight: '500' }}>Face Recognition</h2>
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', maxWidth: '500px', margin: '0 auto' }}>
-            <video ref={videoRef} autoPlay style={{ width: '100%', display: isCameraOn ? 'block' : 'none', borderRadius: '10px' }}></video>
             <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
             {capturedImage && <img src={capturedImage} alt="Captured" style={{ width: '100%', marginTop: '10px', borderRadius: '10px' }} />}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
-              <button onClick={startCamera} style={{ padding: '10px 20px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s' }}>Turn On Camera</button>
-              <button onClick={captureImage} style={{ padding: '10px 20px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s' }}>Capture Image</button>
+              <input type="file" accept="image/*" onChange={handleCaptureImage} style={{ width: '100%', marginBottom: '20px' }} />
               <button onClick={matchFace} style={{ padding: '10px 20px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s' }}>Match Face</button>
             </div>
             {matchedMember && <p style={{ marginTop: '10px', color: '#333', fontSize: '1rem' }}>{matchedMember}</p>}
