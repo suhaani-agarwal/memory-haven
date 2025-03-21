@@ -455,7 +455,7 @@ const Page = () => {
   const [family, setFamily] = useState([]);
   const [name, setName] = useState("");
   const [relationship, setRelationship] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState(""); // New state for phone number
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [image, setImage] = useState(null);
   const [voice, setVoice] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
@@ -463,6 +463,10 @@ const Page = () => {
   const [modelsLoaded, setModelsLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState("info");
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioURL, setAudioURL] = useState("");
+  const audioRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -481,6 +485,16 @@ const Page = () => {
     loadModels();
   }, []);
 
+  useEffect(() => {
+    if (matchedMember) {
+      const matchedCard = family.find((member) => member.name === matchedMember);
+      if (matchedCard && matchedCard.voice) {
+        const audio = new Audio(matchedCard.voice);
+        audio.play();
+      }
+    }
+  }, [matchedMember, family]);
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -492,10 +506,34 @@ const Page = () => {
     }
   };
 
-  const handleVoiceChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setVoice(URL.createObjectURL(file));
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      const chunks = [];
+
+      mediaRecorderRef.current.ondataavailable = (e) => {
+        chunks.push(e.data);
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        const blob = new Blob(chunks, { type: "audio/wav" });
+        const url = URL.createObjectURL(blob);
+        setAudioURL(url);
+        setVoice(url);
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
     }
   };
 
@@ -504,9 +542,10 @@ const Page = () => {
       setFamily([...family, { name, relationship, phoneNumber, image, voice }]);
       setName("");
       setRelationship("");
-      setPhoneNumber(""); // Reset phone number
+      setPhoneNumber("");
       setImage(null);
       setVoice(null);
+      setAudioURL("");
     }
   };
 
@@ -539,30 +578,23 @@ const Page = () => {
       return;
     }
 
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
 
     try {
       const img = await faceapi.fetchImage(capturedImage);
-      console.log("Captured image loaded for face detection");
-
       const capturedDetections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
-      console.log("Captured face detections:", capturedDetections);
 
       if (!capturedDetections) {
         console.warn("No face detected in captured image.");
         setMatchedMember("No face detected.");
-        setIsLoading(false); // Stop loading
+        setIsLoading(false);
         return;
       }
 
       const labeledDescriptors = await Promise.all(
         family.map(async (member) => {
           const storedImage = await faceapi.fetchImage(member.image);
-          console.log(`Loaded stored image for ${member.name}`);
-
           const storedDetections = await faceapi.detectSingleFace(storedImage).withFaceLandmarks().withFaceDescriptor();
-          console.log(`Stored face detections for ${member.name}:`, storedDetections);
-
           return storedDetections ? { descriptor: storedDetections.descriptor, member } : null;
         })
       );
@@ -570,30 +602,26 @@ const Page = () => {
       const bestMatch = labeledDescriptors.reduce((best, current) => {
         if (!current) return best;
         const distance = faceapi.euclideanDistance(capturedDetections.descriptor, current.descriptor);
-        console.log(`Distance to ${current.member.name}:`, distance);
         return distance < 0.5 && (best === null || distance < best.distance) ? { distance, member: current.member } : best;
       }, null);
 
       if (bestMatch) {
-        console.log(`Best match: ${bestMatch.member.name} with distance ${bestMatch.distance}`);
-        setMatchedMember(bestMatch.member.name); // Store the matched member's name
-        setActiveTab("gallery"); // Switch to gallery tab
-        setIsLoading(false); // Stop loading
+        setMatchedMember(bestMatch.member.name);
+        setActiveTab("gallery");
       } else {
-        console.log("No match found.");
         setMatchedMember("The face doesn't match with anything in the gallery.");
-        setIsLoading(false); // Stop loading
       }
     } catch (error) {
       console.error("Error in face matching:", error);
       setMatchedMember("Error matching face. Please try again.");
-      setIsLoading(false); // Stop loading
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div style={{ fontFamily: 'Poppins, sans-serif', padding: '20px', background: 'linear-gradient(135deg, #f4f4f9, #e0e0f0)', minHeight: '100vh', textAlign: 'center' }}>
-      <h1 style={{ color: '#007BFF', marginBottom: '20px', fontSize: '2.5rem', fontWeight: '600' }}>My Family</h1>
+      <h1 style={{ color: '#6a0dad', marginBottom: '20px', fontSize: '2.5rem', fontWeight: '600' }}>My Family</h1>
 
       {/* Tab Navigation */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', gap: '10px' }}>
@@ -601,7 +629,7 @@ const Page = () => {
           onClick={() => setActiveTab("info")}
           style={{
             padding: '10px 20px',
-            backgroundColor: activeTab === "info" ? '#007BFF' : '#6c757d',
+            backgroundColor: activeTab === "info" ? '#9370DB' : '#6c757d',
             color: 'white',
             border: 'none',
             borderRadius: '5px',
@@ -615,7 +643,7 @@ const Page = () => {
           onClick={() => setActiveTab("gallery")}
           style={{
             padding: '10px 20px',
-            backgroundColor: activeTab === "gallery" ? '#007BFF' : '#6c757d',
+            backgroundColor: activeTab === "gallery" ? '#9370DB' : '#6c757d',
             color: 'white',
             border: 'none',
             borderRadius: '5px',
@@ -629,7 +657,7 @@ const Page = () => {
           onClick={() => setActiveTab("recognition")}
           style={{
             padding: '10px 20px',
-            backgroundColor: activeTab === "recognition" ? '#007BFF' : '#6c757d',
+            backgroundColor: activeTab === "recognition" ? '#9370DB' : '#6c757d',
             color: 'white',
             border: 'none',
             borderRadius: '5px',
@@ -653,17 +681,26 @@ const Page = () => {
             <input type="file" accept="image/*" onChange={handleImageChange} style={{ width: '100%', marginBottom: '20px' }} />
           </div>
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '10px', color: '#555' }}>Upload Voice Note:</label>
-            <input type="file" accept="audio/*" onChange={handleVoiceChange} style={{ width: '100%', marginBottom: '20px' }} />
+            <label style={{ display: 'block', marginBottom: '10px', color: '#555' }}>Record Voice Note:</label>
+            {!isRecording ? (
+              <button onClick={startRecording} style={{ padding: '10px 20px', backgroundColor: '#9370DB', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s', width: '100%' }}>
+                Start Recording
+              </button>
+            ) : (
+              <button onClick={stopRecording} style={{ padding: '10px 20px', backgroundColor: '#ff4d4d', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s', width: '100%' }}>
+                Stop Recording
+              </button>
+            )}
+            {audioURL && <audio controls src={audioURL} style={{ marginTop: '10px', width: '100%' }} />}
           </div>
-          <button onClick={addFamilyMember} style={{ padding: '10px 20px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s', width: '100%' }}>Add Member</button>
+          <button onClick={addFamilyMember} style={{ padding: '10px 20px', backgroundColor: '#9370DB', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s', width: '100%' }}>Add Member</button>
         </div>
       )}
 
       {/* Gallery Tab */}
       {activeTab === "gallery" && (
         <div>
-          <h2 style={{ color: '#007BFF', marginTop: '20px', fontSize: '1.8rem', fontWeight: '500' }}>Family Gallery</h2>
+          <h2 style={{ color: '#6a0dad', marginTop: '20px', fontSize: '1.8rem', fontWeight: '500' }}>Family Gallery</h2>
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '20px', marginTop: '20px' }}>
             {family.map((member, index) => (
               <div key={index} id={`member-${member.name}`} style={{ 
@@ -672,11 +709,11 @@ const Page = () => {
                 borderRadius: '10px', 
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', 
                 textAlign: 'center', 
-                width: matchedMember === member.name ? '250px' : '200px', // Increase size for matched member
-                transform: matchedMember === member.name ? 'scale(1.1)' : 'scale(1)', // Highlight matched member
+                width: matchedMember === member.name ? '250px' : '200px',
+                transform: matchedMember === member.name ? 'scale(1.1)' : 'scale(1)',
                 transition: 'transform 0.3s, width 0.3s',
-                border: matchedMember === member.name ? '2px solid #007BFF' : 'none', // Add border for matched member
-                position: 'relative' // For delete button positioning
+                border: matchedMember === member.name ? '2px solid #6a0dad' : 'none',
+                position: 'relative'
               }}>
                 <button
                   onClick={() => deleteFamilyMember(index)}
@@ -699,7 +736,16 @@ const Page = () => {
                 >
                   ×
                 </button>
-                <img src={member.image} alt={member.name} style={{ width: '100%', height: '150px', borderRadius: '10px', objectFit: 'cover' }} />
+                <img 
+                  src={member.image} 
+                  alt={member.name} 
+                  style={{ 
+                    width: '100%', 
+                    height: 'auto', // Allow the image to scale naturally
+                    borderRadius: '10px', 
+                    objectFit: 'contain' // Ensure the image fits without cropping
+                  }} 
+                />
                 <h3 style={{ marginTop: '10px', color: '#333', fontSize: '1.2rem', fontWeight: '500' }}>{member.name}</h3>
                 <p style={{ color: '#777', fontSize: '0.9rem' }}>{member.relationship}</p>
                 <p style={{ color: '#777', fontSize: '0.9rem' }}>{member.phoneNumber}</p>
@@ -713,13 +759,13 @@ const Page = () => {
       {/* Facial Recognition Tab */}
       {activeTab === "recognition" && (
         <div>
-          <h2 style={{ color: '#007BFF', marginTop: '20px', fontSize: '1.8rem', fontWeight: '500' }}>Face Recognition</h2>
+          <h2 style={{ color: '#9370DB', marginTop: '20px', fontSize: '1.8rem', fontWeight: '500' }}>Face Recognition</h2>
           <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', maxWidth: '500px', margin: '0 auto' }}>
             <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
             {capturedImage && <img src={capturedImage} alt="Captured" style={{ width: '100%', marginTop: '10px', borderRadius: '10px' }} />}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
-              <input type="file" accept="image/*" onChange={handleCaptureImage} style={{ width: '100%', marginBottom: '20px' }} />
-              <button onClick={matchFace} style={{ padding: '10px 20px', backgroundColor: '#007BFF', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s' }}>Match Face</button>
+              <input type="file" accept="image/*" onChange={handleCaptureImage} style={{ width: '100%', marginBottom: '20px', padding: '10px', border: '1px solid #6a0dad', borderRadius: '5px', cursor: 'pointer' }} />
+              <button onClick={matchFace} style={{ padding: '10px 20px', backgroundColor: '#9370DB', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s' }}>Match Face</button>
             </div>
             {matchedMember && <p style={{ marginTop: '10px', color: '#333', fontSize: '1rem' }}>{matchedMember}</p>}
           </div>
@@ -729,7 +775,7 @@ const Page = () => {
       {/* Loading Screen */}
       {isLoading && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(255, 255, 255, 0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ fontSize: '1.5rem', color: '#007BFF' }}>Loading...</div>
+          <div style={{ fontSize: '1.5rem', color: '#9370DB' }}>Loading...</div>
         </div>
       )}
     </div>
